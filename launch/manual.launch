@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find lab_automation_test)/launch/UR_robot.launch"> </include> 
+    <node pkg="lab_automation_test" type="record.py" name="Grasping" output="screen"> </node>
+</launch>

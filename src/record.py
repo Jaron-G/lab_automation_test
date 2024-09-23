@@ -26,8 +26,6 @@ def construct_pose(position, quaternion, frame_id = "base_link") -> geometry_msg
     return robot_pose
 
 
-
-
 rospy.sleep(1)
 ur = UR_robot()
 path = "/catkin_ws/src/lab_automation_test/config/"
@@ -63,8 +61,12 @@ class Application(tk.Frame):
         self.move_joint_angle_button.pack(pady=5)
         self.action_button = tk.Button(self.frame1, text="Action", command=self.press_action_button, width=28)
         self.action_button.pack(pady=5)
+        self.action_manual_button = tk.Button(self.frame1, text="Action manual", command=self.press_action_manual_button, width=28)
+        self.action_manual_button.pack(pady=5)
         self.open_gripper_button = tk.Button(self.frame1, text="Open Gripper To Width", command=self.press_open_gripper_button, width=28)
         self.open_gripper_button.pack(pady=5)
+        self.select_action_button = tk.Button(self.frame1, text="Select action to do", command=self.press_action_select_button, width=28)
+        self.select_action_button.pack(pady=5)
         self.quit = tk.Button(self.frame1, text="QUIT", fg="red", command=self.master.destroy, bd=3, width=28)
         self.quit.pack(pady=5)
 
@@ -120,6 +122,13 @@ class Application(tk.Frame):
         ).grid(row=6, column=0)
         self.entry6 = tk.Entry(self.frame2)
         self.entry6.grid(row=6, column=1, padx=2, pady=5)
+        
+        # action path
+        self.action_path_label = tk.Label(self.frame2, text="action path :").grid(
+            row=0, column=3
+        )
+        self.entry_action_path = tk.Entry(self.frame2)
+        self.entry_action_path.grid(row=0, column=4, padx=2, pady=5)
 
         # position.x
         self.position_x_label = tk.Label(self.frame2, text="position.x :").grid(
@@ -181,14 +190,14 @@ class Application(tk.Frame):
     # 在终端打印当前模式信息
     def debug_check(self):
         if  self.debug_var.get()==1 :
-            print("Start debug mode !") 
+            print("Start joint mode !") 
         else:
-            print("Start normal mode !")
+            print("Start pose mode !")
             
     def press_open_gripper_button(self):
         if  0 < int(self.entry0.get()) < 85 :
             self.gripper_width = int(self.entry0.get())
-            width = -255/85*self.gripper_width +255
+            width = -255/85*self.gripper_width + 255
             gripper.control_gripper(width)# gripper.open()
             self.message_var.set("open gripper completed!")  
             return True
@@ -199,6 +208,26 @@ class Application(tk.Frame):
                 title="Warning", message="Gripper width should be 0-85 !"
             )
             return False
+        
+    def press_action_select_button(self):
+        action_path = "/catkin_ws/src/lab_automation_test/action/"
+        action = self.entry_action_path.get()
+        print("You select Action " + self.entry0.get() + " to do!")
+        self.message_var.set(self.entry0.get() + " to do!")
+
+        if self.debug_var.get() == 1:
+            print("Start action joint mode !")
+            joint_goal = np.load(action_path + action + "/current_joint_angle.npy")
+            ur.go_to_goal_joint_angle(joint_goal)
+            rospy.sleep(3)
+        else:
+            print("Start action pose mode !")
+            position = np.load(action_path + action + "/current_position.npy")
+            rotation = np.load(action_path + action + "/current_rotation.npy")
+            robot_pose = construct_pose(position, rotation)
+            ur.go_to_goal_pose(robot_pose)
+            rospy.sleep(5)
+        self.message_var.set("action completed!")
 
     def press_obtain_pose_button(self):
         current_pose = ur.get_current_pose()
@@ -254,7 +283,7 @@ class Application(tk.Frame):
 
         for i in range(6):
             joint_entry[i].delete(0, 100)
-            joint_entry[i].insert(0, joint_angle[i])
+            joint_entry[i].insert(0, joint_angle[i]*180/np.pi)
         np.save(path+ "current_joint_angle.npy",joint_angle)
         print("current_joint_angle.npy",joint_angle)
         self.message_var.set("obtain joint angle completed!")
@@ -344,139 +373,139 @@ class Application(tk.Frame):
         self.message_var.set("action completed!") 
         
     def press_action_manual_button(self):
-        action_path = "/catkin_ws/src/grasp_eyeinhand/dongzuo/"
+        action_path = "/catkin_ws/src/lab_automation_test/back_up/dongzuo/"
         
-        action = "Aa01M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa01M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
         
-        action = "Aa02M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa02M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
         
-        gripper_width = 35 # gripper.close()
-        width = -255/85*gripper_width +255
-        gripper.control_gripper(width)
-        rospy.sleep(2)
+        # gripper_width = 35 # gripper.close()
+        # width = -255/85*gripper_width +255
+        # gripper.control_gripper(width)
+        # rospy.sleep(2)
         
-        action = "Aa03M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa03M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
         
-        action = "Aa04M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa04M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
         
-        action = "Aa05M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa05M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
         
-        action = "Aa06M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa06M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
         
-        action = "Aa07M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa07M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
         
-        action = "Aa08M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa08M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # action = "Aa09M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # action = "Aa10M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # gripper_width = 85
+        # width = -255/85*gripper_width +255
+        # gripper.control_gripper(width)# gripper.open()
+        # rospy.sleep(2)
+        
+        # action = "Aa11M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        action_path = "/catkin_ws/src/lab_automation_test/back_up/dongzuo1/"
+        
+        # action = "Aa01M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # action = "Aa02M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # gripper_width = 33 # gripper.close()
+        # width = -255/85*gripper_width +255
+        # gripper.control_gripper(width)
+        # rospy.sleep(2)
+        
+        # action = "Aa03M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # action = "Aa04M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # action = "Aa05M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # action = "Aa06M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # action = "Aa07M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
+        
+        # action = "Aa08M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
         
         action = "Aa09M"
         joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
         ur.go_to_goal_joint_angle(joint_goal)
         rospy.sleep(3)
         
-        action = "Aa10M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa10M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
         
-        gripper_width = 85
-        width = -255/85*gripper_width +255
-        gripper.control_gripper(width)# gripper.open()
-        rospy.sleep(2)
+        # gripper_width = 85
+        # width = -255/85*gripper_width +255
+        # gripper.control_gripper(width)# gripper.open()
+        # rospy.sleep(2)
         
-        action = "Aa11M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        action_path = "/catkin_ws/src/grasp_eyeinhand/dongzuo1/"
-        
-        action = "Aa01M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        action = "Aa02M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        gripper_width = 33 # gripper.close()
-        width = -255/85*gripper_width +255
-        gripper.control_gripper(width)
-        rospy.sleep(2)
-        
-        action = "Aa03M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        action = "Aa04M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        action = "Aa05M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        action = "Aa06M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        action = "Aa07M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        action = "Aa08M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        action = "Aa09M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        action = "Aa10M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
-        
-        gripper_width = 85
-        width = -255/85*gripper_width +255
-        gripper.control_gripper(width)# gripper.open()
-        rospy.sleep(2)
-        
-        action = "Aa11M"
-        joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
-        ur.go_to_goal_joint_angle(joint_goal)
-        rospy.sleep(3)
+        # action = "Aa11M"
+        # joint_goal = np.load(action_path+ action + "/current_joint_angle.npy")
+        # ur.go_to_goal_joint_angle(joint_goal)
+        # rospy.sleep(3)
     
     def press_reset_robot_button(self):
         rospy.loginfo("Reset Robot !")

@@ -67,8 +67,8 @@ class UR_robot(object):
         self.move_group.set_max_acceleration_scaling_factor(0.3)
         self.move_group.set_max_velocity_scaling_factor(0.3)
         self.move_group.set_goal_joint_tolerance(0.001)
-        self.move_group.set_goal_position_tolerance(0.1)
-        self.move_group.set_goal_orientation_tolerance(0.1)
+        self.move_group.set_goal_position_tolerance(0.001)
+        self.move_group.set_goal_orientation_tolerance(0.01)
         # self.add_box_objects('table', (0, 0, -0.1), (1.5, 1.5, 0.01))
     
     def go_to_goal_pose(self, pose_goal):

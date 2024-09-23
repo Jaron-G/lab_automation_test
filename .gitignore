@@ -1,1 +1,7 @@
 back_up/
+src/__pycache__/real_gripper_control.cpython-38.pyc
+src/__pycache__/ur_control.cpython-38.pyc
+action.zip
+*.npy
+action/
+config/

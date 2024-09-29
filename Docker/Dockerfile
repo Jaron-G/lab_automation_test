@@ -1,6 +1,7 @@
-FROM do.nark.eu.org/osrf/ros:noetic-desktop-full
+FROM docker.1panel.live/osrf/ros:noetic-desktop-full
 # Set the environment variable to non-interactive, this is to avoid the tzdata configuration during the installation of the packages
 ENV DEBIAN_FRONTEND=noninteractive
+RUN sed -i 's#http://archive.ubuntu.com/#http://mirrors.tuna.tsinghua.edu.cn/#' /etc/apt/sources.list
 
 # System layer installation
 RUN apt-get update && \
@@ -19,9 +20,10 @@ RUN apt-get update && \
 RUN mkdir -p /catkin_ws/src && \
     cd /catkin_ws/src && \
     git clone -b noetic-devel https://github.com/ros-industrial/universal_robot.git && \
-    git clone https://github.com/UniversalRobots/Universal_Robots_ROS_Driver.git && \
+    # git clone https://github.com/UniversalRobots/Universal_Robots_ROS_Driver.git && \
     apt-get update && \
     apt-get upgrade -y && \
+    apt install -y ros-noetic-ur-robot-driver && \
     apt-get install -y ros-${ROS_DISTRO}-moveit-planners-chomp && \
     apt-get install -y ros-${ROS_DISTRO}-pilz-industrial-motion-planner && \
     apt-get install -y ros-${ROS_DISTRO}-moveit-ros-control-interface && \
@@ -41,18 +43,35 @@ RUN mkdir -p /catkin_ws/src && \
     apt-get install -y python3-tk && \
     apt-get install -y ros-noetic-ros-control ros-noetic-ros-controllers
 
-# Dependencies layer # PCL and VTK and Pyvista and Halcon
+# Dependencies layer # PCL and VTK and Pyvista and open3d
 RUN apt-get update -y && \
     apt-get install -y libvtk7-dev python3-vtk7 && \
     apt install -y libpcl-dev &&\
     apt install -y python3-pcl &&\
-    pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
-    pip install numpy vtk &&\
-    pip install pyvista && \
-    pip install pyvistaqt meshio &&\
-    pip install mvtec-halcon==23050 &&\
-    pip install transforms3d && \
-    pip install scipy
+    pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip3 install numpy vtk &&\
+    pip3 install pyvista && \
+    pip3 install pyvistaqt meshio &&\
+    pip3 install transforms3d && \
+    pip3 install scipy
+
+# Dependencies layer # Azure Kinect SDK
+RUN wget https://packages.microsoft.com/ubuntu/18.04/prod/pool/main/libk/libk4a1.3/libk4a1.3_1.3.0_amd64.deb && \
+    wget https://packages.microsoft.com/ubuntu/18.04/prod/pool/main/libk/libk4a1.3-dev/libk4a1.3-dev_1.3.0_amd64.deb && \ 
+    wget https://packages.microsoft.com/ubuntu/18.04/prod/pool/main/k/k4a-tools/k4a-tools_1.3.0_amd64.deb && \
+    echo 'libk4a1.3 libk4a1.3/accepted-eula-hash string 0f5d5c5de396e4fee4c0753a21fee0c1ed726cf0316204edda484f08cb266d76' | debconf-set-selections && \
+    dpkg -i libk4a1.3_1.3.0_amd64.deb && \
+    dpkg -i libk4a1.3-dev_1.3.0_amd64.deb && \
+    apt-get install -y libsoundio1 && \
+    dpkg -i k4a-tools_1.3.0_amd64.deb
+    
+# Dependencies layer # OpenCV and find_object_2d
+RUN apt-get update -y && \
+    apt-get install -y ros-noetic-find-object-2d &&\
+    pip3 install opencv-contrib-python==4.8.0.76 && \
+    pip3 install pyk4a && \
+    pip3 install open3d && \
+    pip3 install cv_bridge
 
 # Clone my custimized repositories
 RUN cd /catkin_ws/src && \

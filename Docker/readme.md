@@ -13,4 +13,5 @@ bash build.bash
 In current path, run the follwowing command to start the docker container with the name `grasp_control_container`:
 ```bash
 bash demo.bash
+test
 ```
